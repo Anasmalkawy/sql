@@ -1,0 +1,112 @@
+--create database task3;
+--use task3;
+
+CREATE TABLE Students (
+    student_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    date_of_birth DATE,
+    address VARCHAR(255),
+    Email VARCHAR(255)
+);
+
+CREATE TABLE family_info (
+    family_id INT PRIMARY KEY,
+    student_id INT,
+    father_name VARCHAR(100),
+    FOREIGN KEY (student_id) REFERENCES Students(student_id)
+);
+
+CREATE TABLE Courses (
+    course_id INT PRIMARY KEY,
+    course_name VARCHAR(100),
+    description TEXT,
+    Resource VARCHAR(255)
+);
+
+
+CREATE TABLE Classes (
+    class_id INT PRIMARY KEY,
+    class_code VARCHAR(50),
+    room_number INT,
+    schedule DATETIME,
+    student_id INT,
+    course_id INT,
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (course_id) REFERENCES Courses(course_id)
+);
+
+CREATE TABLE Assignments (
+    assignment_id INT PRIMARY KEY,
+    assignment_name VARCHAR(100),
+    description TEXT,
+    due_date DATE,
+    state VARCHAR(10) CHECK (state IN ('pass', 'failed')),  -- بديل لـ ENUM
+    student_id INT,
+    FOREIGN KEY (student_id) REFERENCES Students(student_id)
+);
+
+CREATE TABLE attendance (  -- تجنب استخدام اسم attendance مباشرة
+    attendance_id INT PRIMARY KEY,
+    attendance_date DATE,
+    type_of_absence VARCHAR(10) CHECK (type_of_absence IN ('leaving', 'absence', 'late')),  -- بديل لـ ENUM
+    reason TEXT,
+    student_id INT,
+    FOREIGN KEY (student_id) REFERENCES Students(student_id)
+);
+
+
+
+CREATE TABLE Student_Classes (
+    student_id INT,
+    class_id INT,
+    PRIMARY KEY (student_id, class_id),
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (class_id) REFERENCES Classes(class_id)
+);
+
+CREATE TABLE Student_Assignments (
+    student_id INT,
+    assignment_id INT,
+    PRIMARY KEY (student_id, assignment_id),
+    FOREIGN KEY (student_id) REFERENCES Students(student_id),
+    FOREIGN KEY (assignment_id) REFERENCES Assignments(assignment_id)
+);
+
+
+-- 1. تحديد الطلاب الذين ولدوا في تاريخ معين
+SELECT * FROM Students WHERE date_of_birth = '1999-11-07';
+
+-- 2. جلب تفاصيل دورة معينة حسب الاسم
+SELECT * FROM Courses WHERE course_name = 'Math';
+
+-- 4. إدراج سجل جديد لطالب
+INSERT INTO Students (student_id, name, date_of_birth, address, Email)
+VALUES (1, 'Ali Hassan', '2005-03-15', '123 Street, City', 'ali.hassan@example.com');
+
+-- 5. تحديد الطلاب الذين لديهم أقارب في النظام
+SELECT s.*
+FROM Students s
+JOIN family_info f ON s.student_id = f.student_id;
+
+-- 6. تحديد الطلاب المسجلين في دورة معينة (مثل الرياضيات)
+SELECT DISTINCT s.*
+FROM Students s
+JOIN Student_Classes sc ON s.student_id = sc.student_id
+JOIN Classes c ON sc.class_id = c.class_id
+JOIN Courses co ON c.course_id = co.course_id
+WHERE co.course_name = 'Math';
+
+-- 7. تحديد الطلاب الذين قدموا ونجحوا في واجب معين (مثل SQL Assignment)
+SELECT DISTINCT s.*
+FROM Students s
+JOIN Student_Assignments sa ON s.student_id = sa.student_id
+JOIN Assignments a ON sa.assignment_id = a.assignment_id
+WHERE a.assignment_name = 'SQL Assignment' AND a.state = 'pass';
+
+-- 8. تحديد الطلاب الذين أخذوا إجازة بين الأحد والخميس (1/1/2024 - 5/1/2024)
+SELECT DISTINCT s.*
+FROM Students s
+JOIN attendance a ON s.student_id = a.student_id
+WHERE a.type_of_absence = 'leaving'
+AND a.attendance_date BETWEEN '2024-01-01' AND '2024-01-05';
+
