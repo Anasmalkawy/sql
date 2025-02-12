@@ -164,15 +164,13 @@ where member_book.return_>member_book.due_data;
 
 ---------------9----------------
 
+select     member_book.book_id , book.Title
+FROM book
+INNER JOIN member_book 
+ON book.id = member_book.book_id
+GROUP BY member_book.book_id ,  book.Title
+HAVING COUNT  (book.id ) >=3
 
-SELECT b.id, b.Title, b.Author, b.Genre
-FROM book b
-WHERE b.id IN (
-    SELECT book_id 
-    FROM member_book
-    GROUP BY book_id
-    HAVING COUNT(id) >= 3
-);
 
 -----------10--------------
 
